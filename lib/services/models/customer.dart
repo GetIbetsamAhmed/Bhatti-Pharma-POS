@@ -1,29 +1,50 @@
+import 'package:bhatti_pos/shared/string_extension.dart';
+
 class Customer {
-  String? name;
-  String? gmail;
-  String? phno;
-  String? address;
+  int? id;
+  String? userName;
+  String? customerName;
+  String? area;
+  String? phone;
+  bool? status;
+  String? createDate;
+  String? bookingDay;
 
   Customer({
-    this.name,
-    this.gmail,
-    this.phno,
-    this.address,
+    this.id,
+    this.userName,
+    this.customerName,
+    this.area,
+    this.phone,
+    this.status,
+    this.createDate,
+    this.bookingDay,
   });
 
   Customer.fromJson(Map<String, dynamic> json) {
-    name = json['name'] ?? "";
-    gmail = json['gmail'] ?? "";
-    phno = json['phone'] ?? "";
-    address = json['address'] ?? "";
+    id = json['Id'];
+    userName = json['UserName'];
+    customerName = json['CustomerName'];
+    customerName = customerName!.capitalizeInitials();
+    area = json['Area'];
+    area = area!.capitalizeInitials();
+    phone = json['Phone'];
+    status = json['Status'];
+    createDate = json['CreateDate'];
+    bookingDay = json['BookingDay'];
   }
 
   Map<String, dynamic> toJson() {
-    Map<String, dynamic> data = {};
-    data['name'] = name;
-    data['gmail'] = gmail;
-    data['phone'] = phno;
-    data['address'] = address;
+    final Map<String, dynamic> data = {};
+    data['Id'] = id;
+    data['UserName'] = userName;
+    data['CustomerName'] = customerName;
+    data['Area'] = area;
+    data['Phone'] = phone;
+    data['Status'] = status;
+    data['CreateDate'] = createDate;
+    data['BookingDay'] = bookingDay;
     return data;
   }
 }
+

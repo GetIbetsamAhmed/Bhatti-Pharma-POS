@@ -1,4 +1,4 @@
-import 'dart:ui';
+// import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
@@ -34,7 +34,23 @@ class TextStyle600FW16FS extends TextStyle {
     this.textColor = Colors.black,
   }) : super(
           fontSize: 16,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
+          color: textColor,
+          letterSpacing: 0.5,
+        );
+}
+
+class CustomTextStyle extends TextStyle {
+  final Color textColor;
+  final FontWeight weight;
+  final double size;
+  const CustomTextStyle({
+    this.textColor = Colors.black,
+    this.weight = FontWeight.normal,
+    this.size = 14,
+  }) : super(
+          fontSize: size,
+          fontWeight: weight,
           color: textColor,
           letterSpacing: 0.5,
         );
