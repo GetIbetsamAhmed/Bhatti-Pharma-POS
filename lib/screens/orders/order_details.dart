@@ -3,14 +3,14 @@
 import 'package:bhatti_pos/screens/base_screen/basescreen.dart';
 import 'package:bhatti_pos/services/models/order.dart';
 import 'package:bhatti_pos/services/models/order_details.dart';
-import 'package:bhatti_pos/services/utils/apiClient.dart';
+// import 'package:bhatti_pos/services/utils/apiClient.dart';
 import 'package:bhatti_pos/shared/constants/border_radius.dart';
 import 'package:bhatti_pos/shared/constants/colors.dart';
 import 'package:bhatti_pos/shared/constants/spaces.dart';
 import 'package:bhatti_pos/shared/constants/text_styles.dart';
 import 'package:bhatti_pos/shared/widgets/orders_widgets/order_details_tile.dart';
 import 'package:bhatti_pos/shared/widgets/others/no_data.dart';
-import 'package:bhatti_pos/shared/widgets/others/progress_indicator.dart';
+// import 'package:bhatti_pos/shared/widgets/others/progress_indicator.dart';
 import 'package:bhatti_pos/state_management/provider/provider_state.dart';
 import 'package:bhatti_pos/state_management/static_data/state.dart';
 import 'package:flutter/material.dart';
@@ -18,9 +18,13 @@ import 'package:provider/provider.dart';
 
 class OrderDetailsScreen extends StatefulWidget {
   final Order order;
+  final double subTotal, discountedPrice, totalAmount;
   const OrderDetailsScreen({
     super.key,
     required this.order,
+    required this.subTotal,
+    required this.discountedPrice,
+    required this.totalAmount,
   });
 
   @override
@@ -44,80 +48,48 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     super.dispose();
   }
 
-  double subTotal = 0.0;
-
-  double discountedPrice = 0.0;
-
-  double totalAmount = 0.0;
-
-  getOrderDetails() async {
-    OrderList.orderDetails = [];
-    APIClient _apiClient = APIClient();
-    List data = await _apiClient.getOrderDetails(widget.order.orderNo!);
-    for (dynamic item in data) {
-      OrderDetails details = OrderDetails.fromJson(item);
-      OrderList.orderDetails.add(details);
-      subTotal += (details.unitPrice! * details.quantity!);
-      // discountedPrice += details.discount! * details.quantity!;
-      discountedPrice += details.discount! * details.quantity!;
-      totalAmount += details.payableAmount!;
-    }
-    // totalAmount = subTotal - discountedPrice;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FutureBuilder(
-        future: getOrderDetails(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CustomProgressIndicator();
-          } else {
-            return Consumer<CartProvider>(
-              builder: (context, value, child) => BaseScreen(
-                onWillPop: () async {
-                  value.clearOrderDetailSFilter();
-                  return true;
-                },
-                searchHintText: "Product name/ Payable amount",
-                screenTitle: widget.order.customerFirstName!,
-                showSearch: OrderList.orderDetails.isEmpty ? false : true,
-                widget: OrderList.orderDetails.isEmpty ||
-                        searching && value.orderDetails.isEmpty
-                    ? const NoData()
-                    : _orderDetailsUI(
-                        context,
-                        // if the user is searching then the UI will be displayed the data containing the
-                        // searched order other wise they will be displayed all details that are fetched from
-                        // the api accordingly
-                        searching ? value.orderDetails : OrderList.orderDetails,
-                        widget.order.createDate!,
-                        subTotal,
-                        discountedPrice,
-                        totalAmount,
-                        value,
-                      ),
-                onChanged: (val) {
-                  searching = true;
-                  value.filterOrderDetails(val);
-                  if (val.isEmpty) {
-                    searching = false;
-                  }
-                },
-                onTap: () {
-                  Navigator.pop(context);
-                },
-                onSubmit: (val) {
-                  value.clearOrderDetailSFilter();
-                  _orderSearchController!.clear();
-                  searching = false;
-                },
-                controller: _orderSearchController!,
-              ),
-            );
-          }
-        },
+      body: Consumer<CartProvider>(
+        builder: (context, value, child) => BaseScreen(
+          onWillPop: () async {
+            value.clearOrderDetailSFilter();
+            return true;
+          },
+          searchHintText: "Product name/ Payable amount",
+          screenTitle: widget.order.customerFirstName!,
+          showSearch: OrderList.orderDetails.isEmpty ? false : true,
+          widget: OrderList.orderDetails.isEmpty ||
+                  searching && value.orderDetails.isEmpty
+              ? const NoData()
+              : _orderDetailsUI(
+                  context,
+                  // if the user is searching then the UI will be displayed the data containing the
+                  // searched order other wise they will be displayed all details that are fetched from
+                  // the api accordingly
+                  searching ? value.orderDetails : OrderList.orderDetails,
+                  widget.order.createDate!,
+                  value,
+                ),
+          onChanged: (val) {
+            searching = true;
+            value.filterOrderDetails(val);
+            if (val.isEmpty) {
+              searching = false;
+              value.clearOrderDetailSFilter();
+            }
+          },
+          onTap: () {
+            Navigator.pop(context);
+          },
+          onSubmit: (val) {
+            value.clearOrderDetailSFilter();
+            _orderSearchController!.clear();
+            searching = false;
+          },
+          controller: _orderSearchController!,
+        ),
       ),
     );
   }
@@ -126,9 +98,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     BuildContext context,
     List<OrderDetails> data,
     String orderDate,
-    double subTotal,
-    double discount,
-    double totalPrice,
+    // double subTotal,we,
     CartProvider provider,
   ) {
     return Consumer<CartProvider>(
@@ -177,21 +147,21 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                     // Subtotal
                     _computedData(
                       "Sub Total",
-                      subTotal.toStringAsFixed(2),
+                      widget.subTotal.toStringAsFixed(2),
                       true,
                     ),
 
                     // Discounted Price
                     _computedData(
                       "Discount",
-                      discount.toStringAsFixed(2),
+                      widget.discountedPrice.toStringAsFixed(2),
                       true,
                     ),
 
                     // Total Price
                     _computedData(
                       "Total Price",
-                      totalPrice.toStringAsFixed(2),
+                      widget.totalAmount.toStringAsFixed(2),
                       false,
                     ),
                   ],

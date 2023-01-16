@@ -77,7 +77,7 @@ class _ReportsState extends State<Reports> {
           
           // Area-Wise Reports
           ReportTile(
-            imagePath: "assets/icons/sales_reports.svg",
+            imagePath: "assets/icons/area_wise_reports.svg",
             text: "Area Wise Reports",
             onTap: () {
               Navigator.push(

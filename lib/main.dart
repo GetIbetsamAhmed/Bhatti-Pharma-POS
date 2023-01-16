@@ -1,3 +1,4 @@
+// import 'package:bhatti_pos/screens/admin/admin_screen.dart';
 import 'package:bhatti_pos/screens/splash/splash.dart';
 import 'package:bhatti_pos/state_management/provider/provider_state.dart';
 import 'package:flutter/material.dart';
@@ -43,7 +44,8 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: const SplashScreen(),
+      home: const SplashScreen(), 
+      // home: AdminScreen(),
     );
   }
 }

@@ -10,11 +10,13 @@ class Quantity extends StatefulWidget {
   final int quantity;
   final double currentStock;
   final double size;
+  final bool isEditingOrder;
   const Quantity({
     super.key,
     required this.currentStock,
     required this.quantity,
     required this.size,
+    this.isEditingOrder = false,
   });
 
   @override
@@ -22,23 +24,25 @@ class Quantity extends StatefulWidget {
 }
 
 class _QuantityState extends State<Quantity> {
-  TextEditingController quantityController = TextEditingController();
+  TextEditingController? quantityController;
 
   @override
   void dispose() {
     super.dispose();
-    quantityController.dispose();
+    quantityController!.dispose();
   }
 
   @override
   void initState() {
-    ProductList.quantity = widget.quantity;
+    quantityController = TextEditingController();
+    ProductList.quantity = int.parse(widget.quantity.toString());
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    quantityController.text = ProductList.quantity.toString();
+    quantityController!.text = ProductList.quantity.toString();
+
     return Container(
       color: Colors.transparent,
       width: widget.size,
@@ -50,7 +54,9 @@ class _QuantityState extends State<Quantity> {
           ElevatedButton(
             onPressed: () {
               if (ProductList.quantity <= widget.currentStock) {
+                // showToast("${ProductList.quantity++}", Colors.white);
                 ProductList.quantity++;
+                // ProductList.quantity += double.parse("Hafce00453dfg234fdksd".replaceAll(RegExp(r'[^0-9]'),''));
               } else {
                 showToast("Limit exceeded", Colors.white);
               }
@@ -72,45 +78,55 @@ class _QuantityState extends State<Quantity> {
             child: const Icon(Icons.add),
           ),
           const Space05h(),
-          // Quantity
 
-          // Text(
-          //   "${ProductList.quantity}",
-          //   style: const CustomTextStyle(size: 16, textColor: greyTextColor),
-          // ),
+          // Quantity
           SizedBox(
             width: 50,
             child: Form(
               autovalidateMode: AutovalidateMode.always,
               child: TextFormField(
-                controller: quantityController,
+                controller: quantityController!,
                 validator: (value) {
-                  // print("From Validor $value");
-                  if (value!.isNotEmpty && value[0] != "-") {
-                    if (int.parse(value) > widget.currentStock || int.parse(value)<0) {
-                      return "Invalid";
+                  if (kDebugMode) {
+                    print("From Validor $value");
+                    print("product quantity is ${ProductList.quantity}");
+                  }
+                    if (value!.isNotEmpty) {
+                      ProductList.quantity = int.parse(value);
+                      if (value[0] == "-" ||
+                          int.parse(value) > widget.currentStock) {
+                        return "Invalid";
+                      }
                     }
-                  }
-                  if(value.isNotEmpty && value[0] == "-"){
-                    return "Invalid";
-                  }
-                  // quantityController.text = value;
+                    if (value.isEmpty) {
+                      // quantityController!.text = "0";
+                      ProductList.quantity = 0;
+                      return "Empty";
+                    }
+                  // } else {
+                  //   if (value!.isNotEmpty) {
+                  //     if (widget.currentStock <= 0) {
+                  //       if (value[0] == '-') {
+                  //         return "Invalid";
+                  //       }
+                  //       if (int.parse(value) <= ProductList.quantity) {
+                  //         ProductList.quantity = int.parse(value);
+                  //       } else {
+                  //         return "Invalid";
+                  //       }
+                  //     } else {}
+                  //   }
+                  //   if (value.isEmpty) {
+                  //     // quantityController!.text = "0";
+                  //     // ProductList.quantity = 0;
+                  //     return "Empty";
+                  //   }
+                  // }
+                  // quantityController!.text = value;
                   return null;
                 },
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
-                onChanged: (value) {
-                  // print(value);
-                  if (value.isNotEmpty && value[0] != "-") {
-                    if (int.parse(value) <= widget.currentStock ) {
-                      ProductList.quantity = int.parse(value);
-                    }
-                  } 
-                  else {
-                    // print("Else Chala");
-                    ProductList.quantity = 0;
-                  }
-                },
               ),
             ),
           ),
@@ -120,8 +136,8 @@ class _QuantityState extends State<Quantity> {
           ElevatedButton(
             onPressed: () {
               setState(() {
-                if (ProductList.quantity != 0) {
-                  ProductList.quantity--;
+                if (ProductList.quantity != 0.0) {
+                  ProductList.quantity -= 1;
                 } else {
                   showToast("Invalid operation", Colors.white);
                 }

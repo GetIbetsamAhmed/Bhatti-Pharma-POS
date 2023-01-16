@@ -1,27 +1,26 @@
-import 'package:bhatti_pos/services/models/cart_product.dart';
+import 'package:bhatti_pos/services/models/products/cart_product.dart';
 import 'package:bhatti_pos/shared/constants/border_radius.dart';
 import 'package:bhatti_pos/shared/constants/border_widgets.dart';
 import 'package:bhatti_pos/shared/constants/colors.dart';
 import 'package:bhatti_pos/shared/constants/spaces.dart';
 import 'package:bhatti_pos/shared/constants/text_styles.dart';
 import 'package:bhatti_pos/shared/function.dart';
+import 'package:bhatti_pos/shared/widgets/others/toast.dart';
 import 'package:bhatti_pos/state_management/provider/provider_state.dart';
-import 'package:bhatti_pos/state_management/static_data/state.dart';
 import 'package:bhatti_pos/shared/widgets/cart_widgets/cart_popup.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class CartProductTile extends StatefulWidget {
   final CartProduct product;
+  final bool isEditingOrder;
   final TextEditingController controller;
-  const CartProductTile({
-    super.key,
-    required this.product,
-    required this.controller,
-  });
+  const CartProductTile(
+      {super.key,
+      required this.product,
+      required this.controller,
+      this.isEditingOrder = false});
 
   @override
   State<CartProductTile> createState() => _CartProductTileState();
@@ -30,10 +29,8 @@ class CartProductTile extends StatefulWidget {
 class _CartProductTileState extends State<CartProductTile> {
   @override
   Widget build(BuildContext context) {
-    DateTime dateTime =
-        DateTime.fromMillisecondsSinceEpoch(widget.product.timeStamp);
-    String date = DateFormat("dd/MM/yyyy").format(dateTime);
-    String time = DateFormat("hh:mm:ss a").format(dateTime);
+    // DateTime dateTime =
+    //     DateTime.fromMillisecondsSinceEpoch(widget.product.timeStamp);
 
     return Column(
       children: [
@@ -41,21 +38,24 @@ class _CartProductTileState extends State<CartProductTile> {
           endActionPane: ActionPane(
             motion: const StretchMotion(),
             children: [
-
               // Delete from cart
               SlidableAction(
                 onPressed: (context) {
                   final cart =
                       Provider.of<CartProvider>(context, listen: false);
-                  cart.removeCart(widget.product);
-                  cart.decrementCount();
+                  if (widget.isEditingOrder && cart.getAllCarts.length == 1) {
+                    showToast("Cannot clear order", Colors.white);
+                  } else {
+                    cart.removeCart(widget.product);
+                    cart.decrementCount();
+                  }
 
                   if (cart.getAllCarts.isEmpty) {
                     Navigator.pop(context);
                     cart.setTotalPrice(0.0);
                   }
                   var provider = context.read<CartProvider>();
-                  if(provider.getFilteredCarts.isEmpty){
+                  if (provider.getFilteredCarts.isEmpty) {
                     widget.controller.clear();
                     provider.clearCartFilters();
                   }
@@ -68,13 +68,13 @@ class _CartProductTileState extends State<CartProductTile> {
           startActionPane: ActionPane(
             motion: const StretchMotion(),
             children: [
-
               // Edit Cart
               SlidableAction(
                 onPressed: (context) {
-                  ProductList.quantity = widget.product.quantity;
-                  if (kDebugMode) print(widget.product.quantity);
-                  updateCart(context, widget.product);
+                  // ProductList.quantity =
+                  //     int.parse(widget.product.quantity.toString());
+                  // if (kDebugMode) print(widget.product.quantity);
+                  updateCart(context, widget.product, widget.isEditingOrder);
                 },
                 icon: Icons.edit,
                 backgroundColor: blueColor,
@@ -146,7 +146,9 @@ class _CartProductTileState extends State<CartProductTile> {
                     _valueContainer(
                       context,
                       "Discount per unit",
-                      "${(widget.product.discount * 100 / widget.product.unitPrice).toStringAsFixed(2)}%",
+                      widget.isEditingOrder
+                          ? "${widget.product.discount}%"
+                          : "${(widget.product.discount * 100 / widget.product.unitPrice).toStringAsFixed(2)}%",
                     ),
                     _verticalDivider(context),
                     _valueContainer(
@@ -164,7 +166,7 @@ class _CartProductTileState extends State<CartProductTile> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: Text(
-                    "$date   $time",
+                    widget.product.dateTime,
                     style: const TextStyle400FW12FS(
                       textColor: greyTextColor,
                       weight: FontWeight.w600,
@@ -211,6 +213,8 @@ class _CartProductTileState extends State<CartProductTile> {
               weight: FontWeight.w700,
               size: 12,
             ),
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

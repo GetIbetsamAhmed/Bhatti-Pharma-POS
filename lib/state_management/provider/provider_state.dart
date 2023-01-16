@@ -1,12 +1,12 @@
 // ignore_for_file: unused_field, prefer_final_fields
 
-import 'package:bhatti_pos/services/models/cart_product.dart';
+import 'package:bhatti_pos/services/models/products/cart_product.dart';
 import 'package:bhatti_pos/services/models/category.dart';
 import 'package:bhatti_pos/services/models/customer.dart';
 import 'package:bhatti_pos/services/models/daily_report_data.dart';
 import 'package:bhatti_pos/services/models/order.dart';
 import 'package:bhatti_pos/services/models/order_details.dart';
-import 'package:bhatti_pos/services/models/product.dart';
+import 'package:bhatti_pos/services/models/products/product.dart';
 import 'package:bhatti_pos/services/models/sales_report_data.dart';
 import 'package:bhatti_pos/shared/widgets/others/toast.dart';
 import 'package:bhatti_pos/state_management/static_data/state.dart';
@@ -27,6 +27,14 @@ class CartProvider extends ChangeNotifier {
   List<OrderDetails> _allOrderDetails = OrderList.orderDetails;
   List<DailyReportData> _allDailyReports = ReportList.dailyReports;
   List<SalesReportData> _allProductSalesReports = ReportList.salesReportData;
+  double _currentSalesAmount = 0.0;
+
+  setCurrentSalesAmount(double amount) {
+    _currentSalesAmount = amount;
+    notifyListeners();
+  }
+
+  double get currentSalesAmount => _currentSalesAmount;
 
   // Sales Reports
   List<SalesReportData> get getAllProductSalesReports =>
@@ -132,6 +140,12 @@ class CartProvider extends ChangeNotifier {
 
   // Cart List
 
+  void initializeCartListWithProductsToBeEditted() {
+    // _cartList = _listOfProducts;
+    // initialize cart list the list of all products that are to be editted.
+    notifyListeners();
+  }
+
   void setCartLists(List<CartProduct> list) {
     _cartList = list;
     notifyListeners();
@@ -159,10 +173,32 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateCartDataWithProductName(
+    double price,
+    double quantity,
+    // String dateTime,
+    String productName,
+  ) {
+    double previousPrice = 0.0;
+    for (CartProduct product in _cartList) {
+      if (product.productName.compareTo(productName) == 0) {
+        previousPrice = product.totalPrice;
+        product.totalPrice = price;
+        product.quantity = quantity;
+        // product.dateTime = dateTime;
+        break;
+      }
+    }
+    // updating the price
+    _totalPrice -= previousPrice;
+    _totalPrice += price;
+    notifyListeners();
+  }
+
   void updateCartData(
     double price,
-    int quantity,
-    int timeStamp,
+    double quantity,
+    String dateTime,
     int productId,
   ) {
     double previousPrice = 0.0;
@@ -171,7 +207,7 @@ class CartProvider extends ChangeNotifier {
         previousPrice = product.totalPrice;
         product.totalPrice = price;
         product.quantity = quantity;
-        product.timeStamp = timeStamp;
+        product.dateTime = dateTime;
         break;
       }
     }
@@ -183,26 +219,46 @@ class CartProvider extends ChangeNotifier {
 
   int currentTagId = 0;
 
-  filter(Categories tag) {
-    if (tag.id != getTagValue) {
-      setTagValue(tag.id!);
-      currentTagId = tag.id!;
+  filter(Categories tag, bool showTaost, {bool isOrderFilter = false}) {
+    _currentTag = tag.id!;
+    currentTagId = tag.id!;
+    if (isOrderFilter == false) {
       if (tag.id != 0) {
         _allProductsForPOS = ProductList.allProducts
-            .where((element) => element.categoryID == tag.id)
+            .where((element) => element.categoryName!
+                .toLowerCase()
+                .contains(tag.name!.toLowerCase()))
             .toList();
       } else {
         _allProductsForPOS = ProductList.allProducts;
       }
-      notifyListeners();
-      showToast(
+      if (showTaost) {
+        showToast(
           "Filtered by ${tag.name}, total Items ${_allProductsForPOS.length}",
-          Colors.white);
+          Colors.white,
+        );
+      }
+    } else {
+      if (!tag.name!.contains("All")) {
+        _allOrders = OrderList.allOrders
+            .where((element) => element.orderStatus!.contains(tag.name!))
+            .toList();
+      } else {
+        _allOrders = OrderList.allOrders;
+      }
+      if (showTaost) {
+        showToast(
+          "Filtered by ${tag.name}, total Items ${_allOrders.length}",
+          Colors.white,
+        );
+      }
     }
+    notifyListeners();
+
     // return filteredData;
   }
 
-  filterProductbyNumber(int id) {
+  filterbyNumber(int id) {
     if (id != 0) {
       _allProductsForPOS = ProductList.allProducts
           .where((element) => element.categoryID == id)
@@ -213,74 +269,88 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  filterProductsByString(String data, bool isPOS) {
+  filterPOSProductsByString(String data) {
     bool valid = false;
-    List<Product> localList = [];
     try {
       double.parse(data);
       valid = true;
     } catch (e) {
       valid = false;
     }
-    // _allProducts = ProductList.allProducts;
-    if (currentTagId != 0) {
-      if (!valid) {
-        localList = ProductList.allProducts
-            .where(
-              (element) =>
-                  element.categoryID == currentTagId &&
-                  (element.categoryName!
-                          .toLowerCase()
-                          .contains(data.toLowerCase()) ||
-                      element.productName!
-                          .toLowerCase()
-                          .contains(data.toLowerCase())),
-            )
-            .toList();
-      } else {
-        localList = ProductList.allProducts
-            .where((element) =>
-                element.categoryID == currentTagId &&
-                element.unitPrice! <= double.parse(data))
-            .toList();
-      }
+
+    Categories currentTag = CategoryList.categories[getCurrentTagIndex()];
+    filter(currentTag, false);
+
+    if (!valid) {
+      _allProductsForPOS = _allProductsForPOS
+          .where(
+            (element) =>
+                // element.categoryID == currentTagId &&
+                (element.categoryName!
+                        .toLowerCase()
+                        .contains(data.toLowerCase()) ||
+                    element.productName!
+                        .toLowerCase()
+                        .contains(data.toLowerCase())),
+          )
+          .toList();
     } else {
-      if (!valid) {
-        localList = ProductList.allProducts
-            .where(
-              (element) => (element.categoryName!
-                      .toLowerCase()
-                      .contains(data.toLowerCase()) ||
-                  element.productName!
-                      .toLowerCase()
-                      .contains(data.toLowerCase())),
-            )
-            .toList();
-      } else {
-        localList = ProductList.allProducts
-            .where((element) => element.unitPrice! <= double.parse(data))
-            .toList();
-      }
+      _allProductsForPOS = _allProductsForPOS
+          .where((element) =>
+              // element.categoryID == currentTagId &&
+              element.unitPrice! <= double.parse(data))
+          .toList();
     }
-    if (isPOS) {
-      _allProductsForPOS = localList;
-    } else {
-      _allProductsForProduct = localList;
-    }
+
     notifyListeners();
   }
 
-  clearProductFilters(bool isPOS) {
-    if (isPOS) {
-      if (kDebugMode) print("IT is pos");
-      filterProductbyNumber(currentTagId);
+  clearPOSProductFilters({bool fromPOSCustomers = false}) {
+    if (fromPOSCustomers) {
+      _allProductsForPOS = ProductList.allProducts;
+      notifyListeners();
     } else {
-      _allProductsForProduct = ProductList.allProducts;
+      Categories currentTag = CategoryList.categories[getCurrentTagIndex()];
+      filter(currentTag, false);
     }
-    if (kDebugMode) {
-      print(
-          "POS Products count ${_allProductsForPOS.length} and ProductScreen Product Count ${_allProductsForProduct.length}");
+  }
+
+  filterProductsByString(String data) {
+    bool valid = false;
+
+    try {
+      double.parse(data);
+      valid = true;
+    } catch (e) {
+      valid = false;
     }
+
+    if (!valid) {
+      _allProductsForProduct = ProductList.allProducts
+          .where(
+            (element) =>
+                element.categoryName!
+                    .toLowerCase()
+                    .contains(data.toLowerCase()) ||
+                element.productName!
+                    .toLowerCase()
+                    .contains(data.toLowerCase()) ||
+                element.categoryName!
+                    .toLowerCase()
+                    .contains(data.toLowerCase()),
+          )
+          .toList();
+    } else {
+      _allProductsForProduct = ProductList.allProducts
+          .where((element) => element.unitPrice! <= double.parse(data))
+          .toList();
+    }
+
+    notifyListeners();
+  }
+
+  clearProductFilters() {
+    _allProductsForProduct = ProductList.allProducts;
     notifyListeners();
   }
 
@@ -300,7 +370,9 @@ class CartProvider extends ChangeNotifier {
           _cartList.where((element) => element.unitPrice <= amount).toList();
     } else {
       _filteredCartList = _cartList
-          .where((element) => element.productName.toLowerCase().contains(val))
+          .where((element) =>
+              element.productName.toLowerCase().contains(val) ||
+              element.categoryName.toLowerCase().contains(val))
           .toList();
     }
     notifyListeners();
@@ -368,23 +440,36 @@ class CartProvider extends ChangeNotifier {
 
   List<Order> get getAllOrders => _allOrders;
 
+  int getCurrentTagIndex() {
+    for (int i = 0; i < CategoryList.categories.length; i++) {
+      if (CategoryList.categories[i].id! == currentTagId) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
   void searchOrderByData(String data) {
     data = data.toLowerCase();
-    _allOrders = OrderList.allOrders
+    Categories currentTag = CategoryList.categories[getCurrentTagIndex()];
+    filter(currentTag, false, isOrderFilter: true);
+
+    _allOrders = _allOrders
         .where((element) =>
-                element.customerFirstName!.toLowerCase().contains(data) ||
-                element.orderNo!.contains(data) ||
-                element.area!.toLowerCase().contains(data)
-            // element.createDate!.toLowerCase().contains(data.toLowerCase()),
-            )
+            element.customerFirstName!.toLowerCase().contains(data) ||
+            element.orderNo!.contains(data) ||
+            element.area!.toLowerCase().contains(data))
         .toList();
 
     notifyListeners();
   }
 
   void clearOrderFilter() {
-    _allOrders = OrderList.allOrders;
-    notifyListeners();
+    if (kDebugMode) print(currentTagId);
+
+    Categories currentTag = CategoryList.categories[getCurrentTagIndex()];
+    filter(currentTag, false, isOrderFilter: true);
+    // notifyListeners();
   }
 
   // Total Price

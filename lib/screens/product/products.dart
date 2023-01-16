@@ -1,7 +1,7 @@
 // ignore_for_file: no_leading_underscores_for_local_identifiers
 
 import 'package:bhatti_pos/screens/base_screen/basescreen.dart';
-import 'package:bhatti_pos/services/models/product.dart';
+import 'package:bhatti_pos/services/models/products/product.dart';
 import 'package:bhatti_pos/services/utils/apiClient.dart';
 import 'package:bhatti_pos/shared/function.dart';
 import 'package:bhatti_pos/shared/widgets/others/no_data.dart';
@@ -54,46 +54,54 @@ class _ProductScreenState extends State<ProductScreen> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const CustomProgressIndicator();
         } else {
-          return Consumer<CartProvider>(
-            builder: (context, value, child) => BaseScreen(
-              onWillPop: () async {
-                value.clearProductFilters(false);
-                return true;
-              },
-              searchHintText: "Product name/ Unit price/ Category",
-              screenTitle: "All Products",
-              controller: _searchController!,
-              showSearch: ProductList.allProducts.isEmpty ? false : true,
-              onChanged: (val) {
-                value.filterProductsByString(val, false);
-                searching = true;
-              },
-              onSubmit: (val) {
-                value.clearProductFilters(false);
-                _searchController?.clear();
-                searching = false;
-              },
-              onTap: () {
-                Navigator.pop(context);
-                searching = false;
-                value.clearProductFilters(false);
-              },
-              widget: searching && value.getProductsForProducts.isEmpty ||
-                      ProductList.allProducts.isEmpty
-                  ? const NoData()
-                  : NotificationListener<ScrollNotification>(
-                      onNotification: closeKeyboardOnScroll,
-                      child: ListView.builder(
-                        itemCount: searching
-                            ? value.getProductsForProducts.length
-                            : ProductList.allProducts.length,
-                        itemBuilder: (context, index) => ProductTile(
-                          product: searching
-                              ? value.getProductsForProducts[index]
-                              : ProductList.allProducts[index],
+          return RefreshIndicator(
+            onRefresh: () async {
+              await getAllProducts();
+            },
+            child: Consumer<CartProvider>(
+              builder: (context, value, child) => BaseScreen(
+                onWillPop: () async {
+                  value.clearProductFilters();
+                  return true;
+                },
+                searchHintText: "Product name/ Unit price/ Category",
+                screenTitle: "All Products",
+                controller: _searchController!,
+                showSearch: ProductList.allProducts.isEmpty ? false : true,
+                onChanged: (val) {
+                  searching = true;
+                  value.filterProductsByString(val);
+                  if (val.isEmpty) {
+                    value.clearProductFilters();
+                  }
+                },
+                onSubmit: (val) {
+                  value.clearProductFilters();
+                  _searchController?.clear();
+                  searching = false;
+                },
+                onTap: () {
+                  Navigator.pop(context);
+                  searching = false;
+                  value.clearProductFilters();
+                },
+                widget: searching && value.getProductsForProducts.isEmpty ||
+                        ProductList.allProducts.isEmpty
+                    ? const NoData()
+                    : NotificationListener<ScrollNotification>(
+                        onNotification: closeKeyboardOnScroll,
+                        child: ListView.builder(
+                          itemCount: searching
+                              ? value.getProductsForProducts.length
+                              : ProductList.allProducts.length,
+                          itemBuilder: (context, index) => ProductTile(
+                            product: searching
+                                ? value.getProductsForProducts[index]
+                                : ProductList.allProducts[index],
+                          ),
                         ),
                       ),
-                    ),
+              ),
             ),
           );
         }

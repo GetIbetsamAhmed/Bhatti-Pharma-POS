@@ -4,9 +4,8 @@ import 'package:bhatti_pos/screens/base_screen/basescreen.dart';
 import 'package:bhatti_pos/screens/cart/cart_screen.dart';
 import 'package:bhatti_pos/services/models/category.dart';
 import 'package:bhatti_pos/services/models/customer.dart';
-import 'package:bhatti_pos/services/models/product.dart';
+import 'package:bhatti_pos/services/models/products/product.dart';
 import 'package:bhatti_pos/services/utils/apiClient.dart';
-import 'package:bhatti_pos/shared/constants/spaces.dart';
 import 'package:bhatti_pos/shared/function.dart';
 import 'package:bhatti_pos/shared/widgets/cart_widgets/cart_icon.dart';
 import 'package:bhatti_pos/shared/widgets/others/no_data.dart';
@@ -23,9 +22,11 @@ import 'package:provider/provider.dart';
 
 class PosScreen extends StatefulWidget {
   final Customer customer;
+  final bool isOrderEditing;
   const PosScreen({
     super.key,
     required this.customer,
+    this.isOrderEditing = false,
   });
 
   @override
@@ -33,7 +34,6 @@ class PosScreen extends StatefulWidget {
 }
 
 class _PosScreenState extends State<PosScreen> {
-  bool isSelected = false;
   late ScrollController controller;
   TextEditingController? _searchController;
 
@@ -78,7 +78,7 @@ class _PosScreenState extends State<PosScreen> {
 
   _setInitialFilter() {
     final cart = Provider.of<CartProvider>(context, listen: false);
-    cart.filter(CategoryList.categories[0]);
+    cart.filter(CategoryList.categories[0], false);
   }
 
   fetchData() async {
@@ -107,7 +107,6 @@ class _PosScreenState extends State<PosScreen> {
           return _productUI(
             context,
             _searchController!,
-            isSelected,
             widget.customer,
             controller,
           );
@@ -119,7 +118,6 @@ class _PosScreenState extends State<PosScreen> {
   _productUI(
     BuildContext context,
     TextEditingController textController,
-    bool isSelected,
     Customer customer,
     ScrollController controller,
   ) {
@@ -128,69 +126,81 @@ class _PosScreenState extends State<PosScreen> {
     return Consumer<CartProvider>(
       builder: (context, value, child) => BaseScreen(
         onWillPop: () async {
-          value.clearProductFilters(true);
+          if (!widget.isOrderEditing) {
+            value.clearPOSProductFilters();
+          }
           return true;
         },
         screenTitle: widget.customer.customerName!,
         controller: textController,
-        searchHintText: "Product Name/ Unit Price/ Category",
+        searchHintText: "Product Name/ Unit Price",
         onChanged: (val) {
-          value.filterProductsByString(val, true);
           searching = true;
+          value.filterPOSProductsByString(val);
+          if (val.isEmpty) {
+            value.clearPOSProductFilters(fromPOSCustomers: false);
+          }
         },
         onSubmit: (val) {
-          value.clearProductFilters(true);
+          value.clearPOSProductFilters();
           textController.clear();
           searching = false;
         },
         showSearch: ProductList.allProducts.isEmpty ? false : true,
         widget: ProductList.allProducts.isEmpty
             ? const NoData()
-            : searching
-                ? value.getProductsForPOS.isEmpty
-                    ? const NoData()
-                    : _posUI(context, isSelected, customer, controller,
-                        textController, searching, value)
-                : _posUI(context, isSelected, customer, controller,
-                    textController, searching, value),
+            // : searching
+            //     ? value.getProductsForPOS.isEmpty
+            //         ? const NoData()
+            //         : _posUI(context, customer, controller, textController,
+            //             searching, value)
+            : _posUI(context, customer, controller, textController, searching,
+                value),
+
         // showSearch: false,
         bottomSpacing: 05,
         onTap: () {
           final cartList = Provider.of<CartProvider>(context, listen: false);
-          cartList.filter(CategoryList.categories[0]);
+          cartList.filter(CategoryList.categories[0], true);
           Navigator.pop(context);
-          value.clearProductFilters(true);
+          value.clearPOSProductFilters();
           searching = false;
         },
-        button: IconButton(
-          iconSize: 25,
-          onPressed: () {
-            final cart = Provider.of<CartProvider>(context, listen: false);
-            if (cart.getCount == 0) {
-              showToast("Nothing is added to the cart", Colors.white);
-            } else {
-              // Navigation will be done here...
-              closeKeyBoard();
-              Navigator.push(
-                context,
-                LTRPageRoute(
-                  CartScreen(
-                    customer: customer,
-                  ),
-                  100,
-                ),
-              );
-            }
-          },
-          icon: const Cart(),
-        ),
+        button: widget.isOrderEditing
+            ? null
+            : IconButton(
+                iconSize: 25,
+                onPressed: () {
+                  if (widget.isOrderEditing) {
+                    Navigator.pop(context);
+                  } else {
+                    final cart =
+                        Provider.of<CartProvider>(context, listen: false);
+                    if (cart.getCount == 0) {
+                      showToast("Nothing is added to the cart", Colors.white);
+                    } else {
+                      // Navigation will be done here...
+                      closeKeyBoard();
+                      Navigator.push(
+                        context,
+                        LTRPageRoute(
+                          CartScreen(
+                            customer: customer,
+                          ),
+                          100,
+                        ),
+                      );
+                    }
+                  }
+                },
+                icon: const Cart(),
+              ),
       ),
     );
   }
 
   _posUI(
     context,
-    isSelected,
     Customer customer,
     ScrollController controller,
     TextEditingController textController,
@@ -201,54 +211,50 @@ class _PosScreenState extends State<PosScreen> {
     // print(searching);
     return Column(
       children: [
-        if (CategoryList.categories.isNotEmpty)
-          ScrollToHide(
-            controller: controller,
-            enableAnimation: textController.text.isEmpty ? true : false,
-            height: 35,
-            width: MediaQuery.of(context).size.width,
-            child: ListView.builder(
-              itemCount: CategoryList.categories.length,
-              scrollDirection: Axis.horizontal,
-              itemBuilder: (context, index) {
-                return Tag(
-                  category: CategoryList.categories[index],
-                  textController: textController,
-                );
-              },
-            ),
-          ),
         ScrollToHide(
           controller: controller,
-          height: 20,
           enableAnimation: textController.text.isEmpty ? true : false,
+          height: 32,
           width: MediaQuery.of(context).size.width,
-          child: const Space20v(),
+          child: ListView.builder(
+            itemCount: CategoryList.categories.length,
+            scrollDirection: Axis.horizontal,
+            itemBuilder: (context, index) {
+              return Tag(
+                category: CategoryList.categories[index],
+                textController: textController,
+              );
+            },
+          ),
         ),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: GridView.builder(
-              controller: controller,
-              itemCount: value.getProductsForPOS.isNotEmpty
-                  ? value.getProductsForPOS.length
-                  : ProductList.allProducts.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                mainAxisExtent: 145,
-              ),
-              itemBuilder: (context, index) {
-                return POSTile(
-                  data: value.getProductsForPOS.isNotEmpty
-                      ? value.getProductsForPOS[index]
-                      : ProductList.allProducts[index],
-                  customer: customer,
-                  index: index,
-                );
-              },
-            ),
+            child: value.getProductsForPOS.isNotEmpty
+                ? GridView.builder(
+                    controller: controller,
+                    itemCount: value.getProductsForPOS.isNotEmpty
+                        ? value.getProductsForPOS.length
+                        : ProductList.allProducts.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      mainAxisExtent: 145,
+                    ),
+                    itemBuilder: (context, index) {
+                      return POSTile(
+                        // data: value.getProductsForPOS.isNotEmpty
+                        // ? value.getProductsForPOS[index]
+                        // : ProductList.allProducts[index],
+                        data: value.getProductsForPOS[index],
+                        customer: customer,
+                        index: index,
+                      );
+                    },
+                  )
+                : const NoData(),
           ),
         ),
       ],

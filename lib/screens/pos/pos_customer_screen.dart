@@ -72,6 +72,9 @@ _customerUI(context, TextEditingController controller) {
       onChanged: (val) {
         value.filterCustomerByName(val);
         searching = true;
+        if(val.isEmpty){
+          value.clearCustomerFilter();
+        }
       },
       onSubmit: (val) {
         _clearFilter(value, controller);
@@ -91,11 +94,13 @@ _customerUI(context, TextEditingController controller) {
                 itemBuilder: (context, index) => Padding(
                   padding: const EdgeInsets.only(bottom: 10.0),
                   child: CustomerTile(
+                    
                     canCopy: false,
                     onTap: () {
                       _clearCarts(context);
+                      // print(value.getCustomers.length);
                       closeKeyBoard();
-                      value.clearProductFilters(true);
+                      value.clearPOSProductFilters(fromPOSCustomers: true);
                       Navigator.push(
                         context,
                         LTRPageRoute(

@@ -2,13 +2,13 @@
 
 import 'package:bhatti_pos/screens/admin/admin_screen.dart';
 import 'package:bhatti_pos/screens/base_screen/basescreen.dart';
-import 'package:bhatti_pos/services/models/cart_product.dart';
+import 'package:bhatti_pos/screens/pos/pos_product_screen.dart';
+import 'package:bhatti_pos/services/models/products/cart_product.dart';
 import 'package:bhatti_pos/services/models/customer.dart';
 import 'package:bhatti_pos/services/utils/apiClient.dart';
 import 'package:bhatti_pos/shared/constants/colors.dart';
 import 'package:bhatti_pos/shared/constants/spaces.dart';
 import 'package:bhatti_pos/shared/constants/text_styles.dart';
-import 'package:bhatti_pos/shared/function.dart';
 import 'package:bhatti_pos/shared/widgets/cart_widgets/cart_product_tile.dart';
 import 'package:bhatti_pos/shared/widgets/login_widgets/processing_indicator.dart';
 import 'package:bhatti_pos/shared/widgets/others/custom_button.dart';
@@ -22,9 +22,13 @@ import 'package:provider/provider.dart';
 
 class CartScreen extends StatefulWidget {
   final Customer customer;
+  final bool isOrderEditing; // Either the user is creating or editing order
+  final String? orderNumber;
   const CartScreen({
     super.key,
     required this.customer,
+    this.isOrderEditing = false,
+    this.orderNumber,
   });
 
   @override
@@ -52,22 +56,41 @@ class _CartScreenState extends State<CartScreen> {
   Widget build(BuildContext context) {
     return Consumer<CartProvider>(
       builder: (context, value, child) => BaseScreen(
-        onWillPop: () async{
+        onWillPop: () async {
           value.clearCartFilters();
           return true;
         },
         screenTitle: widget.customer.customerName!,
         showSearch: value.getAllCarts.isEmpty ? false : true,
-        searchHintText: "Product name/ Payable amount",
+        searchHintText: "Product name/ Amount/ Category",
         controller: _cartController,
-        // A clear all carts button
-        button: TextButton(
-          child: const Text("Clear All"),
-          onPressed: () {
-            value.clearCarts();
-            Navigator.pop(context);
-          },
-        ),
+
+        button:
+            widget.isOrderEditing // If the user is editing any order, then TRUE
+                ? IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        LTRPageRoute(
+                          PosScreen(
+                            customer: widget.customer,
+                            isOrderEditing: true,
+                          ),
+                          100,
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.add,
+                      color: blueColor,
+                    ))
+                : TextButton(
+                    child: const Text("Clear All"),
+                    onPressed: () {
+                      value.clearCarts();
+                      Navigator.pop(context);
+                    },
+                  ),
         // Back button
         onTap: () {
           value.clearCartFilters();
@@ -115,6 +138,7 @@ class _CartScreenState extends State<CartScreen> {
                                     ? value.getFilteredCarts[index]
                                     : value.getAllCarts[index],
                                 controller: _cartController!,
+                                isEditingOrder: widget.isOrderEditing,
                               ),
                             ),
                           ),
@@ -170,7 +194,52 @@ class _CartScreenState extends State<CartScreen> {
     return await _apiClient.postOrder(body);
   }
 
-  _formatCartProducts(CartProvider provider) {
+  Future<String> _editOrder(List<Map<String, dynamic>> allOrders) async {
+    // Create Objtects
+    int orderNumber = int.parse(widget.orderNumber!);
+
+    Map<String, dynamic> body = {
+      "Orderno": orderNumber,
+      "Items": allOrders,
+    };
+
+    if (kDebugMode) print(body.toString());
+
+    // Edit All Orders
+    return await _apiClient.editOrders(body);
+  }
+
+  List<Map<String, dynamic>> _formatData(CartProvider provider) {
+    if (widget.isOrderEditing) {
+      return _formatCartProductsForUpdatingOrder(provider);
+    } else {
+      return _formatCartProductsForCreatingOrder(provider);
+    }
+  }
+
+  List<Map<String, dynamic>> _formatCartProductsForUpdatingOrder(
+      CartProvider provider) {
+    List<Map<String, dynamic>> allOrders = [];
+
+    for (CartProduct product in provider.getAllCartProducts) {
+      double discount =
+          (product.unitPrice / 100 * product.discount) * product.quantity;
+      Map<String, dynamic> order = {
+        "ProductID": product.productId,
+        "Quantity": product.quantity,
+        "UnitPrice": product.unitPrice,
+        "GrossAmount":
+            product.unitPrice * product.quantity, // Unit price * quantity
+        "Discount": discount, // discount (in PKR) * quantity
+        "Amount": product.totalPrice,
+      };
+      allOrders.add(order);
+    }
+    return allOrders;
+  }
+
+  List<Map<String, dynamic>> _formatCartProductsForCreatingOrder(
+      CartProvider provider) {
     // Creating map of corresponding required fields or all cart products and
     // Maintaining a list of map containing required fields to post order
     List<Map<String, dynamic>> allOrders = [];
@@ -214,7 +283,8 @@ class _CartScreenState extends State<CartScreen> {
             ),
             const Space05v(),
             Text(
-              "PKR ${regulateNumber(double.parse(provider.getTotalPrice().toStringAsFixed(2)))}",
+              // "PKR ${regulateNumber(double.parse(provider.getTotalPrice().toStringAsFixed(2)))}",
+              "PKR ${provider.getTotalPrice().toStringAsFixed(2)}",
               textAlign: TextAlign.center,
               style: const TextStyle600FW16FS(
                 textColor: blueColor,
@@ -226,29 +296,26 @@ class _CartScreenState extends State<CartScreen> {
           // Confirm Button
           TextButton(
             onPressed: () async {
+              String data = "";
               // Maintaining a list of map containing required fields to post order
               List<Map<String, dynamic>> _formattedOrders = [];
+
               // Format all cart products before creating order
-              _formattedOrders = _formatCartProducts(provider);
+              _formattedOrders = _formatData(provider);
 
               LoginWidgets.processingIndicator(context);
 
-              // Posting Order
-              String data = await _postOrder(_formattedOrders);
-
+              // Hittin the api
+              if (widget.isOrderEditing) {
+                data = await _editOrder(_formattedOrders);
+              } else {
+                data = await _postOrder(_formattedOrders);
+              }
               // Closing the loading indicator.
               LoginWidgets.closeProcessingIndicator(context);
 
               if (data.contains("Successfully")) {
-                // for(CartProduct item in provider.getAllCarts){
-                //   print("product list me name hai ${ProductList.allProducts[item.productListReference].productName} or cart list me name hai ${item.productName}");
-                // }
                 provider.clearCarts();
-                // // Closing Dialog
-                // Navigator.pop(context);
-                // // Navigating back to pos screen
-                // Navigator.pop(context);
-                // Navigating back to Admin screen
                 Navigator.pushAndRemoveUntil(context,
                     LTRPageRoute(const AdminScreen(), 100), (route) => false);
               } else {

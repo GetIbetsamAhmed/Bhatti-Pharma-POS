@@ -28,12 +28,14 @@ class OrderDetails {
     productName = json['ProductName'];
     quantity = json['Quantity'];
     unitPrice = json['UnitPrice'];
-    percentageDiscount = double.parse("${json['Discount']}");
+    percentageDiscount =
+        json['Discount'] == null ? 0.0 : double.parse("${json['Discount']}");
     discount = double.parse(
         ((percentageDiscount! / 100) * unitPrice!).toStringAsFixed(5));
     amount = json['Amount'];
     totalAmount = json['TotalAmount'];
-    payableAmount = double.parse(((unitPrice! - discount!)* quantity!).toStringAsFixed(5));
+    payableAmount =
+        double.parse(((unitPrice! - discount!) * quantity!).toStringAsFixed(5));
     if (kDebugMode) print(payableAmount);
   }
 

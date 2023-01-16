@@ -67,30 +67,37 @@ class OrderDetailTile extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      // Quantity
                       _valueContainer(
                         context,
                         "Units Ordered",
                         order.quantity!.toStringAsFixed(2),
                       ),
                       _verticalDivider(context),
+
+                      // Unit Price
                       _valueContainer(
                         context,
                         "Unit Price (PKR)",
-                        
-                        regulateNumber(double.parse(order.unitPrice!.toStringAsFixed(2))),
+                        regulateNumber(
+                            double.parse(order.unitPrice!.toStringAsFixed(2))),
                       ),
                       _verticalDivider(context),
+
+                      // Percentage Discount
                       _valueContainer(
                         context,
                         "Discount per unit",
                         "${order.percentageDiscount!.toStringAsFixed(2)}%",
                       ),
                       _verticalDivider(context),
+
+                      // Total Payable Amount
                       _valueContainer(
                         context,
                         "Payable Amount",
-                        regulateNumber(double.parse(order.payableAmount!.toStringAsFixed(2))),
-                        
+                        regulateNumber(double.parse(
+                            order.payableAmount!.toStringAsFixed(2))),
                       ),
                     ],
                   ),
@@ -161,6 +168,8 @@ class OrderDetailTile extends StatelessWidget {
               weight: FontWeight.w700,
               size: 12,
             ),
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

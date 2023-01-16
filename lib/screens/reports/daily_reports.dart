@@ -90,6 +90,9 @@ class _DailyReportsState extends State<DailyReports> {
         onChanged: (val) {
           searching = true;
           value.filterDailyReports(val);
+          if(val.isEmpty){
+            value.clearDailyReportsFilter();
+          }
         },
         onSubmit: (val) {
           searching = false;

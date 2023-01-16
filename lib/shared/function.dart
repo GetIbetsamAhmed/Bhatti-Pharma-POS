@@ -46,16 +46,17 @@ bool closeKeyboardOnScroll(val) {
 }
 
 String regulateNumber(double num) {
-  String value = "";
-  if (num < 10000) {
-    value = num.toString();
-  }
-  if (num >= 10000 && num < 10000000) {
-    value = "${(num / 1000).toStringAsFixed(2)}K";
-  } else if (num >= 1000000) {
-    value = "${(num / 1000000).toStringAsFixed(2)}M";
-  }
-  return value;
+  // String value = "";
+  // if (num < 10000) {
+  //   value = num.toString();
+  // }
+  // if (num >= 10000 && num < 10000000) {
+  //   value = "${(num / 1000).toStringAsFixed(2)}K";
+  // } else if (num >= 1000000) {
+  //   value = "${(num / 1000000).toStringAsFixed(2)}M";
+  // }
+  // return value; 
+  return num.toString();
 }
 
 bool validateEmail(String value) {

@@ -53,98 +53,98 @@ class _CustomersScreenState extends State<CustomersScreen> {
       },
     );
   }
-}
 
-_customerUI(BuildContext context, TextEditingController controller) {
-  bool searching = false;
-  return Consumer<CartProvider>(
-    builder: (context, value, child) => BaseScreen(
-      onWillPop: () async{
-        value.clearCustomerFilter();
-        return true;
-      },
-      screenTitle: "All Customers",
-      searchHintText: "Customer name/ Phone/ Area",
-      showSearch: CustomerList.customers.isEmpty ? false : true,
-      showFloating: true,
-      onTap: () {
-        Navigator.pop(context);
-        searching = false;
-        value.clearCustomerFilter();
-      },
-      controller: controller,
-      onChanged: (val) {
-        searching = true;
-        value.filterCustomerByName(val);
-      },
-      onSubmit: (val) {
-        value.clearCustomerFilter();
-        controller.clear();
-        // value.clearCustomerFilter();
-        searching = false;
-      },
-      widget: searching && value.getCustomers.isEmpty ||
-              CustomerList.customers.isEmpty
-          ? const NoData()
-          : NotificationListener<ScrollNotification>(
-              onNotification: closeKeyboardOnScroll,
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                // itemCount: searching
-                //     ? value.getCustomers.length
-                // : CustomerList.customers.length,
-                itemCount: value.getCustomers.length,
-                itemBuilder: (context, index) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0),
-                  child: CustomerTile(
-                    onTap: () {
-                      controller.clear();
-                      // int navigatorIndex = index;
+  _customerUI(BuildContext context, TextEditingController controller) {
+    bool searching = false;
+    return Consumer<CartProvider>(
+      builder: (context, value, child) => BaseScreen(
+        onWillPop: () async {
+          value.clearCustomerFilter();
+          return true;
+        },
+        screenTitle: "All Customers",
+        searchHintText: "Customer name/ Phone/ Area",
+        showSearch: CustomerList.customers.isEmpty ? false : true,
+        showFloating: true,
+        onTap: () {
+          Navigator.pop(context);
+          searching = false;
+          value.clearCustomerFilter();
+        },
+        controller: controller,
+        onChanged: (val) {
+          searching = true;
+          value.filterCustomerByName(val);
+          if (val.isEmpty) {
+            value.clearCartFilters();
+          }
+        },
+        onSubmit: (val) {
+          value.clearCustomerFilter();
+          controller.clear();
+          // value.clearCustomerFilter();
+          searching = false;
+        },
+        widget: searching && value.getCustomers.isEmpty ||
+                CustomerList.customers.isEmpty
+            ? const NoData()
+            : NotificationListener<ScrollNotification>(
+                onNotification: closeKeyboardOnScroll,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  itemCount: value.getCustomers.length,
+                  itemBuilder: (context, index) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10.0),
+                    child: CustomerTile(
+                      onTap: () {
+                        controller.clear();
+                        // int navigatorIndex = index;
 
-                      if (kDebugMode) {
-                        print(
-                            "Customer Name is ${value.getCustomers[index].customerName!} and Customer Id is ${value.getCustomers[index].id!}");
-                        print(
-                            "The index that is passed from provider list is  $index and from main list is ${CustomerList.customers[index].customerName}");
-                      }
-                      Navigator.push(
-                        context,
-                        BRTTLPageRoute(
-                          EditCustomer(
-                            text: "Edit Customer",
-                            customerIndex: value.getCustomers[index].id!,
+                        if (kDebugMode) {
+                          print(
+                              "Customer Name is ${value.getCustomers[index].customerName!} and Customer Id is ${value.getCustomers[index].id!}");
+                          print(
+                              "The index that is passed from provider list is  $index and from main list is ${CustomerList.customers[index].customerName}");
+                        }
+                        Navigator.push(
+                          context,
+                          BRTTLPageRoute(
+                            EditCustomer(
+                              text: "Edit Customer",
+                              customerIndex: value.getCustomers[index].id!,
+                            ),
+                            300,
                           ),
-                          300,
-                        ),
-                      );
-                      value.clearCustomerFilter();
-                    },
-                    icon: SvgPicture.asset(
-                      "assets/icons/profile.svg",
-                      height: 35,
-                      width: 25,
-                      color: blueColor,
+                        );
+                        value.clearCustomerFilter();
+                      },
+                      icon: SvgPicture.asset(
+                        "assets/icons/profile.svg",
+                        height: 35,
+                        width: 25,
+                        color: blueColor,
+                      ),
+                      customer: searching
+                          ? value.getCustomers[index]
+                          : CustomerList.customers[index],
                     ),
-                    customer: searching
-                        ? value.getCustomers[index]
-                        : CustomerList.customers[index],
                   ),
                 ),
               ),
+        onFloatingPressed: () {
+          Navigator.push(
+            context,
+            BRTTLPageRoute(
+              const EditCustomer(
+                text: "Create Customer",
+                customerIndex: -1,
+              ),
+              250,
             ),
-      onFloatingPressed: () {
-        Navigator.push(
-          context,
-          BRTTLPageRoute(
-            const EditCustomer(
-              text: "Create Customer",
-              customerIndex: -1,
-            ),
-            250,
-          ),
-        );
-      },
-      floatingButtonIcon: Icons.add,
-    ),
-  );
+          );
+        },
+        floatingButtonIcon: Icons.add,
+      ),
+    );
+  }
 }

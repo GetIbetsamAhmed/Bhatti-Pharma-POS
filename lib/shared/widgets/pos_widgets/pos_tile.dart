@@ -1,8 +1,8 @@
 // ignore_for_file: iterable_contains_unrelated_type
 
-import 'package:bhatti_pos/services/models/cart_product.dart';
+import 'package:bhatti_pos/services/models/products/cart_product.dart';
 import 'package:bhatti_pos/services/models/customer.dart';
-import 'package:bhatti_pos/services/models/product.dart';
+import 'package:bhatti_pos/services/models/products/product.dart';
 import 'package:bhatti_pos/shared/constants/border_widgets.dart';
 import 'package:bhatti_pos/shared/constants/colors.dart';
 import 'package:bhatti_pos/shared/constants/spaces.dart';

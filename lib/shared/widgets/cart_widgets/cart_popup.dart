@@ -1,5 +1,5 @@
-import 'package:bhatti_pos/services/models/cart_product.dart';
-import 'package:bhatti_pos/services/models/product.dart';
+import 'package:bhatti_pos/services/models/products/cart_product.dart';
+import 'package:bhatti_pos/services/models/products/product.dart';
 import 'package:bhatti_pos/shared/constants/colors.dart';
 import 'package:bhatti_pos/shared/constants/spaces.dart';
 import 'package:bhatti_pos/shared/constants/text_styles.dart';
@@ -10,6 +10,7 @@ import 'package:bhatti_pos/shared/widgets/cart_widgets/quantity_adder.dart';
 import 'package:bhatti_pos/shared/widgets/others/toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 addToCart(BuildContext context, Product data, String customerName) {
@@ -27,7 +28,7 @@ addToCart(BuildContext context, Product data, String customerName) {
           ),
           const Space05h(),
           Text(
-            "${data.currentStock!.round()}",
+            data.currentStock!.toStringAsFixed(2),
             style: const TextStyle400FW12FS(
               weight: FontWeight.w600,
               textColor: blueColor,
@@ -59,24 +60,26 @@ addToCart(BuildContext context, Product data, String customerName) {
       content: CustomElevatedButton(
         onTap: () {
           if (ProductList.quantity > data.currentStock! ||
-              ProductList.quantity == 0) {
+              ProductList.quantity <= 0) {
             showToast("Invalid Quantity", Colors.white);
           } else {
             showToast("Successfully added", Colors.white);
             Navigator.of(context).pop(true);
             // double price = data.unitPrice! * ProductList.quantity - data.discount! * ProductList.quantity;
-            double price = calculatePrice(data);
-            DateTime dateTime = DateTime.now();
+            double price = calculatePrice(data, false);
+            String dateTime =
+                DateFormat("dd-MM-yyyy hh:mm:ss a").format(DateTime.now());
+            // String time = DateFormat("hh:mm:ss a").format(dateTime);
             price = double.parse(price.toStringAsFixed(3));
             CartProduct cartProduct = CartProduct(
               customerName: customerName,
               productId: data.productID!,
               productName: data.productName!,
-              categoryId: data.categoryID!,
+              // categoryId: data.categoryID!,
               categoryName: data.categoryName!,
-              quantity: ProductList.quantity,
+              quantity: double.parse(ProductList.quantity.toString()),
               totalPrice: price,
-              timeStamp: dateTime.millisecondsSinceEpoch,
+              dateTime: dateTime,
               unitPrice: data.unitPrice!,
               currentStock: data.currentStock!,
               discount: data.discount!,
@@ -92,74 +95,111 @@ addToCart(BuildContext context, Product data, String customerName) {
   );
 }
 
-updateCart(BuildContext context, CartProduct product) {
+updateCart(BuildContext context, CartProduct product, bool iseditingOrder) {
   final cart = Provider.of<CartProvider>(context, listen: false);
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      icon: Row(
-        children: [
-          const Text(
-            "Total quantity Available is",
-            style: TextStyle400FW12FS(
-              textColor: greyTextColor,
+  int quantity = 0; //= int.parse(product.quantity.toString());
+  try {
+    quantity = int.parse(product.quantity.toString().split(".")[0]);
+  } catch (e) {
+    quantity = product.quantity as int;
+    showToast("$e", Colors.white);
+  }
+  if (!(quantity == 0)) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: Row(
+          children: [
+            const Text(
+              "Total quantity Available is",
+              style: TextStyle400FW12FS(
+                textColor: greyTextColor,
+              ),
             ),
-          ),
-          const Space05h(),
-          Text(
-            "${product.currentStock}",
-            style: const TextStyle400FW12FS(
-              weight: FontWeight.w600,
-              textColor: blueColor,
+            const Space05h(),
+            Text(
+              "${product.currentStock}",
+              style: const TextStyle400FW12FS(
+                weight: FontWeight.w600,
+                textColor: blueColor,
+              ),
             ),
-          ),
-        ],
-      ),
-      title: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            "Enter Quantity",
-            style: CustomTextStyle(
-              textColor: blueColor,
-              size: 14,
+          ],
+        ),
+        title: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Enter Quantity",
+              style: CustomTextStyle(
+                textColor: blueColor,
+                size: 14,
+              ),
+              textAlign: TextAlign.left,
             ),
-            textAlign: TextAlign.left,
-          ),
-          const Space05v(),
-          Quantity(
-            quantity: product.quantity,
-            currentStock: product.currentStock,
-            size: MediaQuery.of(context).size.width,
-          ),
-        ],
+            const Space05v(),
+            Quantity(
+              quantity: quantity,
+              currentStock: product.currentStock,
+              size: MediaQuery.of(context).size.width,
+              isEditingOrder: iseditingOrder,
+            ),
+          ],
+        ),
+        // Add to Cart Button
+        content: CustomElevatedButton(
+          onTap: () {
+            if (kDebugMode) {
+              print("updated quantity is ${ProductList.quantity}");
+            }
+
+            if (ProductList.quantity > product.currentStock) {
+              showToast("Invalid Quantity", Colors.white);
+            } else if (ProductList.quantity <= 0) {
+              showToast("Quantity must be at least one", Colors.white);
+            } else {
+              showToast("Successfully Updated", Colors.white);
+              Navigator.of(context).pop(true);
+              // Calculating new price
+              double price = calculatePrice(product, iseditingOrder);
+              price = double.parse(price.toStringAsFixed(3));
+
+              // current time
+              String dateTime =
+                  DateFormat("dd-MM-yyyy hh:mm:ss a").format(DateTime.now());
+              if (iseditingOrder) {
+                cart.updateCartDataWithProductName(
+                    price,
+                    double.parse(ProductList.quantity.toString()),
+                    // dateTime.toString(),
+
+                    product.productName);
+              } else {
+                cart.updateCartData(
+                  price,
+                  double.parse(ProductList.quantity.toString()),
+                  dateTime,
+                  product.productId,
+                );
+              }
+            }
+          },
+          color: blueColor,
+          text: "Update cart",
+        ),
       ),
-      // Add to Cart Button
-      content: CustomElevatedButton(
-        onTap: () {
-          if (kDebugMode) print("updated quantity is ${ProductList.quantity}");
-          if (ProductList.quantity > product.currentStock) {
-            showToast("Invalid Quantity", Colors.white);
-          } else if (ProductList.quantity == 0) {
-            showToast("Quantity must be at least one", Colors.white);
-          } else {
-            showToast("Successfully Updated", Colors.white);
-            Navigator.of(context).pop(true);
-            double price = calculatePrice(product); 
-            int dateTime = DateTime.now().millisecondsSinceEpoch;
-            price = double.parse(price.toStringAsFixed(3));
-            cart.updateCartData(
-                price, ProductList.quantity, dateTime, product.productId);
-          }
-        },
-        color: blueColor,
-        text: "Update cart",
-      ),
-    ),
-  );
+    );
+  }
 }
 
-double calculatePrice(product){
-  return (product.unitPrice - product.discount) * ProductList.quantity;
+double calculatePrice(product, bool isEditing) {
+  if (isEditing) {
+    double discount = product.unitPrice / 100 * product.discount;
+    double calculatedTotal =
+        (product.unitPrice - discount) * ProductList.quantity;
+    return double.parse(calculatedTotal.toStringAsFixed(2));
+  } else {
+    return (product.unitPrice - product.discount) * ProductList.quantity;
+  }
 }

@@ -13,6 +13,19 @@ class APIClient {
   final String _serviceHostAddress =
       "http://daniyalabid-001-site1.dtempurl.com/api/services/";
 
+  Future<int?> getCurrentDaySales(String userName) async{
+    var uri = Uri.parse("${_serviceHostAddress}CurrentDaySale?UserName=$userName");
+    var response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      int? res = jsonDecode(response.body);
+      return res;
+    } else {
+      showToast("Status Code : ${response.statusCode}", Colors.white);
+      throw Exception("Status Code : ${response.statusCode}");
+    }
+  }
+
   // Get all products
   Future<dynamic> getAllProducts() async {
     var uri = Uri.parse("${_serviceHostAddress}GetAllProducts");
@@ -68,7 +81,8 @@ class APIClient {
       return res;
     } else {
       showToast("Invalid Order", Colors.white);
-      throw Exception("Status Code : ${response.statusCode}");
+      // throw Exception("Status Code : ${response.statusCode}");
+      return null;
     }
   }
 
@@ -105,6 +119,22 @@ class APIClient {
     return returnValue;
     // print(body);
     // await Future.delayed(const Duration(milliseconds: 2000));
+  }
+
+  Future<String> editOrders(Map<String, dynamic> data) async {
+     String returnValue = "";
+    var body = jsonEncode(data);
+    var uri = Uri.parse("${_serviceHostAddress}UpdateOrder");
+    var response = await http.post(uri, body: body, headers: headers);
+
+    if (response.statusCode == 200) {
+      var res = jsonDecode(response.body).toString();
+      showToast(res, Colors.white);
+      returnValue = res;
+    } else {
+      showToast("Invalid Order", Colors.white);
+    }
+    return returnValue;
   }
 
   // Get product vise order reports

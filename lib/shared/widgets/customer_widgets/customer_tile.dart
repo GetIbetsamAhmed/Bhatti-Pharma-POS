@@ -85,54 +85,53 @@ class _CustomerTileState extends State<CustomerTile>
                           // Name and email tile
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.max,
                             children: [
                               // Customer Name
                               SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.6,
+                                width: MediaQuery.of(context).size.width * 0.68,
                                 child: Text(
                                   widget.customer.customerName!,
                                   style: const TextStyle600FW16FS(
                                       textColor: blueColor),
-                                  maxLines: 01,
+                                  maxLines: 02,
                                   overflow: TextOverflow.ellipsis,
                                   textAlign: TextAlign.start,
                                 ),
                               ),
+
                               const Space05v(),
                               // Customer Phone
-                              SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.5,
-                                child: Text(
-                                  "Phone: ${widget.customer.phone!}",
-                                  style: const TextStyle400FW12FS(
-                                    textColor: greyTextColor,
-                                  ),
-                                  maxLines: 01,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.start,
+                              Text(
+                                "Phone: ${widget.customer.phone!}",
+                                style: const TextStyle400FW12FS(
+                                  textColor: greyTextColor,
                                 ),
+                                maxLines: 01,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.start,
                               ),
                             ],
                           ),
                         ],
                       ),
-                      if(widget.canCopy)
-                      InkWell(
-                        child: const Icon(Icons.copy,
-                            size: 16, color: greyIconColor),
-                        onTap: () {
-                          Clipboard.setData(
-                            ClipboardData(
-                              text:
-                                  "Customer Name: ${widget.customer.customerName}\nAddress: ${widget.customer.area!}\nPhone: ${widget.customer.phone!}",
-                            ),
-                          );
-                          showToast(
-                            "Copied to clipboard",
-                            Colors.white,
-                          );
-                        },
-                      ),
+                      if (widget.canCopy)
+                        InkWell(
+                          child: const Icon(Icons.copy,
+                              size: 16, color: greyIconColor),
+                          onTap: () {
+                            Clipboard.setData(
+                              ClipboardData(
+                                text:
+                                    "Customer Name: ${widget.customer.customerName}\nAddress: ${widget.customer.area!}\nPhone: ${widget.customer.phone!}",
+                              ),
+                            );
+                            showToast(
+                              "Copied to clipboard",
+                              Colors.white,
+                            );
+                          },
+                        ),
                     ],
                   ),
                   const Divider(

@@ -192,6 +192,9 @@ class _SalesReportsState extends State<SalesReports> {
         onChanged: (val) {
           searching = true;
           value.filterProductSalesReports(val);
+          if(val.isEmpty){
+            value.clearProductSalesReportFilters();
+          }
         },
         onTap: () {
           searching = false;

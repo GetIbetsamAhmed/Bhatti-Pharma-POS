@@ -8,6 +8,7 @@ class ScrollToHide extends StatefulWidget {
   final double height;
   final double width;
   final bool enableAnimation;
+  final double negativeHeight;
   const ScrollToHide({
     super.key,
     required this.child,
@@ -16,6 +17,7 @@ class ScrollToHide extends StatefulWidget {
     required this.height,
     required this.width,
     this.enableAnimation = true,
+    this.negativeHeight = 10,
   });
 
   @override
@@ -28,6 +30,7 @@ class _ScrollToHideState extends State<ScrollToHide> {
   @override
   void initState() {
     super.initState();
+    isVisible = true;
     widget.controller.addListener(listen);
   }
 
@@ -64,13 +67,19 @@ class _ScrollToHideState extends State<ScrollToHide> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      height: isVisible ? widget.height : 0,
-      curve: Curves.ease,
-      // width: widget.width,
-      duration: widget.duration,
-      // color: blueColor,
-      child: widget.child,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedContainer(
+          height: isVisible ? widget.height : 0,
+          curve: Curves.ease,
+          // width: widget.width,
+          duration: widget.duration,
+          // color: blueColor,
+          child: widget.child,
+        ),
+        SizedBox(height: widget.negativeHeight),
+      ],
     );
   }
 }

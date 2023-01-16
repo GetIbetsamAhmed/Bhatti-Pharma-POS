@@ -12,6 +12,7 @@ class Tag extends StatefulWidget {
   final Color textColor;
   final Color borderColor;
   final TextEditingController textController;
+  final bool fromOrderScreen;
   // final int tagId;
   // bool isTapped;
   const Tag({
@@ -20,7 +21,8 @@ class Tag extends StatefulWidget {
     this.borderColor = blueColor,
     this.tagColor = Colors.transparent,
     this.textColor = blueColor,
-    required this.textController
+    required this.textController,
+    this.fromOrderScreen = false,
     // required this.tagId,
     // required this.isTapped,
   });
@@ -48,8 +50,9 @@ class _TagState extends State<Tag> {
     return Consumer<CartProvider>(
       builder: (context, value, child) => GestureDetector(
         onTap: () {
-          cart.filter(widget.category);
           widget.textController.clear();
+          cart.filter(widget.category, true,
+              isOrderFilter: widget.fromOrderScreen);
           if (kDebugMode) print("${widget.category.id}");
         },
         child: Padding(

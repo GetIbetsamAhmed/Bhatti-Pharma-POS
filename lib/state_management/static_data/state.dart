@@ -5,7 +5,7 @@ import 'package:bhatti_pos/services/models/customer.dart';
 import 'package:bhatti_pos/services/models/daily_report_data.dart';
 import 'package:bhatti_pos/services/models/order.dart';
 import 'package:bhatti_pos/services/models/order_details.dart';
-import 'package:bhatti_pos/services/models/product.dart';
+import 'package:bhatti_pos/services/models/products/product.dart';
 import 'package:bhatti_pos/services/models/sales_report_data.dart';
 
 class ProductList {

@@ -1,4 +1,3 @@
-
 import 'package:bhatti_pos/shared/string_extension.dart';
 
 class Order {
@@ -7,6 +6,7 @@ class Order {
   String? createDate;
   double? netAmount;
   String? area;
+  String? orderStatus;
 
   Order({
     this.orderNo,
@@ -14,6 +14,7 @@ class Order {
     this.createDate,
     this.netAmount,
     this.area,
+    this.orderStatus,
   });
 
   Order.fromJson(Map<String, dynamic> json) {
@@ -21,10 +22,10 @@ class Order {
     customerFirstName = json['CustomerFirstName'];
     customerFirstName = customerFirstName!.capitalizeInitials();
     createDate = json['CreateDate'];
-    
-    netAmount = double.parse(json['NetAmount'].toStringAsFixed(5));
+    netAmount = double.parse(json['NetAmount'].toStringAsFixed(2));
     area = json['CustomerAddress']!;
     area = area!.capitalizeInitials();
+    orderStatus = json['OrderStatus'];
   }
 
   Map<String, dynamic> toJson() {
