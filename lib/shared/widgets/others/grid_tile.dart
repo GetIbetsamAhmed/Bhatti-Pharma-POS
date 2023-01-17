@@ -1,6 +1,5 @@
 import 'package:bhatti_pos/shared/constants/colors.dart';
 import 'package:bhatti_pos/shared/constants/border_radius.dart';
-import 'package:bhatti_pos/shared/constants/border_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -68,7 +67,10 @@ class _CustomGridTileState extends State<CustomGridTile>
           width: widget.width,
           decoration: BoxDecoration(
             borderRadius: borderRadius03,
-            border: border,
+            border: Border.all(
+              width: 2,
+              color: blueColor,
+            ),
             color: borderColor,
           ),
           child: Center(

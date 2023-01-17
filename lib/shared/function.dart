@@ -1,3 +1,4 @@
+import 'package:bhatti_pos/shared/widgets/others/toast.dart';
 import 'package:bhatti_pos/state_management/static_data/state.dart';
 import 'package:flutter/material.dart';
 
@@ -76,4 +77,14 @@ void sortCustomerList() {
     (customer1, customer2) =>
         customer1.customerName!.compareTo(customer2.customerName!),
   );
+}
+
+showCountToastInApp(List data, String message){
+  if(data.isEmpty){
+    showToast("No ${message}s", Colors.white);
+  } else if(data.length == 1){
+    showToast("1 $message to display", Colors.white);
+  } else {
+    showToast("${data.length} ${message}s to diaplay", Colors.white);
+  }
 }

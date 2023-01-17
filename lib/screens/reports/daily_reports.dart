@@ -7,9 +7,9 @@ import 'package:bhatti_pos/services/models/daily_report_data.dart';
 import 'package:bhatti_pos/services/utils/apiClient.dart';
 import 'package:bhatti_pos/shared/constants/colors.dart';
 import 'package:bhatti_pos/shared/constants/text_styles.dart';
+import 'package:bhatti_pos/shared/function.dart';
 import 'package:bhatti_pos/shared/widgets/login_widgets/processing_indicator.dart';
 import 'package:bhatti_pos/shared/widgets/others/no_data.dart';
-import 'package:bhatti_pos/shared/widgets/others/toast.dart';
 import 'package:bhatti_pos/shared/widgets/reports_widgets/daily_reports_tile.dart';
 import 'package:bhatti_pos/state_management/provider/provider_state.dart';
 import 'package:bhatti_pos/state_management/static_data/state.dart';
@@ -44,14 +44,7 @@ class _DailyReportsState extends State<DailyReports> {
     }
 
     // Showing taost of loaded data
-    showToast(
-      ReportList.dailyReports.isEmpty
-          ? "Nothing loaded"
-          : ReportList.dailyReports.length == 1
-              ? "1 item loaded"
-              : "${ReportList.dailyReports.length} items are loaded",
-      Colors.white,
-    );
+    showCountToastInApp(ReportList.dailyReports, "Report");
   }
 
   bool searching = false;

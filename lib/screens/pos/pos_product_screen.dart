@@ -58,7 +58,7 @@ class _PosScreenState extends State<PosScreen> {
       Product product = Product.fromJson(products[index], index);
       ProductList.allProducts.add(product);
     }
-    // print(CartProvider().getProducts.length);
+    showCountToastInApp(products, "Product");
   }
 
   getAllCategories() async {

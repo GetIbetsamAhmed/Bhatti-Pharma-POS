@@ -31,6 +31,7 @@ class _ProductScreenState extends State<ProductScreen> {
       Product product = Product.fromJson(products[index], index);
       ProductList.allProducts.add(product);
     }
+    showCountToastInApp(products, "Product");
   }
 
   @override

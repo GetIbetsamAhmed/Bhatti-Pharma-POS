@@ -7,6 +7,7 @@ import 'package:bhatti_pos/services/models/sales_report_data.dart';
 import 'package:bhatti_pos/services/utils/apiClient.dart';
 import 'package:bhatti_pos/shared/constants/colors.dart';
 import 'package:bhatti_pos/shared/constants/text_styles.dart';
+import 'package:bhatti_pos/shared/function.dart';
 import 'package:bhatti_pos/shared/widgets/login_widgets/processing_indicator.dart';
 import 'package:bhatti_pos/shared/widgets/others/no_data.dart';
 import 'package:bhatti_pos/shared/widgets/others/toast.dart';
@@ -79,14 +80,7 @@ class _SalesReportsState extends State<SalesReports> {
     LoginWidgets.closeProcessingIndicator(context);
 
     // Showing taost of loaded data
-    showToast(
-      ReportList.salesReportData.isEmpty
-          ? "Nothing loaded"
-          : ReportList.salesReportData.length == 1
-              ? "1 item loaded"
-              : "${ReportList.salesReportData.length} items are loaded",
-      Colors.white,
-    );
+    showCountToastInApp(ReportList.salesReportData, "Report");
 
     // Formatting both dates in the date/month/year format with day name (three characters) to
     // display on the appbar

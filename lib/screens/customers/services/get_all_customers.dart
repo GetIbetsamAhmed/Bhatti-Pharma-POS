@@ -16,4 +16,5 @@ getAllCustomers() async {
     CustomerList.customers.add(customer);
   }
   sortCustomerList();
+  showCountToastInApp(customers, "Customer");
 }

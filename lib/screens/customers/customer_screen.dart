@@ -92,43 +92,15 @@ class _CustomersScreenState extends State<CustomersScreen> {
                 onNotification: closeKeyboardOnScroll,
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  itemCount: value.getCustomers.length,
-                  itemBuilder: (context, index) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0),
-                    child: CustomerTile(
-                      onTap: () {
-                        controller.clear();
-                        // int navigatorIndex = index;
-
-                        if (kDebugMode) {
-                          print(
-                              "Customer Name is ${value.getCustomers[index].customerName!} and Customer Id is ${value.getCustomers[index].id!}");
-                          print(
-                              "The index that is passed from provider list is  $index and from main list is ${CustomerList.customers[index].customerName}");
-                        }
-                        Navigator.push(
-                          context,
-                          BRTTLPageRoute(
-                            EditCustomer(
-                              text: "Edit Customer",
-                              customerIndex: value.getCustomers[index].id!,
-                            ),
-                            300,
-                          ),
-                        );
-                        value.clearCustomerFilter();
-                      },
-                      icon: SvgPicture.asset(
-                        "assets/icons/profile.svg",
-                        height: 35,
-                        width: 25,
-                        color: blueColor,
-                      ),
-                      customer: searching
-                          ? value.getCustomers[index]
-                          : CustomerList.customers[index],
-                    ),
-                  ),
+                  itemCount: value.getCustomers.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index < value.getCustomers.length) {
+                      return createCustomer(
+                          controller, value, index, searching);
+                    } else{
+                      return const SizedBox(height: 70);
+                    }
+                  },
                 ),
               ),
         onFloatingPressed: () {
@@ -144,6 +116,38 @@ class _CustomersScreenState extends State<CustomersScreen> {
           );
         },
         floatingButtonIcon: Icons.add,
+      ),
+    );
+  }
+
+  createCustomer(TextEditingController controller, CartProvider value,
+      int index, bool searching) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0),
+      child: CustomerTile(
+        onTap: () {
+          controller.clear();
+          Navigator.push(
+            context,
+            BRTTLPageRoute(
+              EditCustomer(
+                text: "Edit Customer",
+                customerIndex: value.getCustomers[index].id!,
+              ),
+              300,
+            ),
+          );
+          value.clearCustomerFilter();
+        },
+        icon: SvgPicture.asset(
+          "assets/icons/profile.svg",
+          height: 35,
+          width: 25,
+          color: blueColor,
+        ),
+        customer: searching
+            ? value.getCustomers[index]
+            : CustomerList.customers[index],
       ),
     );
   }

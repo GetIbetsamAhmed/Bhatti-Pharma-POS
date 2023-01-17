@@ -11,7 +11,6 @@ import 'package:bhatti_pos/shared/widgets/pos_widgets/on_scroll_hide.dart';
 import 'package:bhatti_pos/shared/widgets/pos_widgets/tag.dart';
 import 'package:bhatti_pos/state_management/provider/provider_state.dart';
 import 'package:bhatti_pos/state_management/static_data/state.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -29,7 +28,7 @@ class _OrderScreenState extends State<OrderScreen> {
   ScrollController? _controller; // To Control Scroll of filters
 
   _sortOrdersById() {
-    OrderList.allOrders.sort((x, y) => x.orderNo!.compareTo(y.orderNo!));
+    OrderList.allOrders.sort((x, y) => y.orderNo!.compareTo(x.orderNo!));
   }
 
   bool _isInFilterList(Order order) {
@@ -65,9 +64,7 @@ class _OrderScreenState extends State<OrderScreen> {
         currentId++;
       }
     }
-    if (kDebugMode) {
-      print("Total Orders to be desplayed are ${OrderList.allOrders.length}");
-    }
+    
 
     // Whenever the screen reloads, all filters must be removed so that we can see all products...
     // This function will perform the task defined above...
@@ -76,6 +73,8 @@ class _OrderScreenState extends State<OrderScreen> {
     // As it is a requirement that all orders must be sorted by Order Number so the function below will
     // perform this task...
     _sortOrdersById();
+
+    showCountToastInApp(orders, "Order");
   }
 
   @override

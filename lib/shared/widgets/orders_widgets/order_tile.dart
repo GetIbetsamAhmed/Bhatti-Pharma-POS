@@ -151,7 +151,7 @@ class _OrderTileState extends State<OrderTile> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Order status
-                  _createBag(),
+                  _orderStatusBagde(),
                   const Space10v(),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -218,7 +218,7 @@ class _OrderTileState extends State<OrderTile> {
     );
   }
 
-  _createBag() {
+  _orderStatusBagde() {
     bool isOrderCompleted =
         widget.order.orderStatus!.toLowerCase().contains("complete");
     return Align(
